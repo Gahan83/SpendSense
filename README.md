@@ -61,14 +61,22 @@ Set a total monthly limit (and optional per-category sub-limits) on the **Budget
 
 Each alert type fires at most once per day per threshold (see `alert_log` table). A month-end summary is sent automatically on the last day of the month (APScheduler cron job) or on demand via **Generate Summary → Send to WhatsApp**.
 
-## Deployment (Render + Vercel)
+## Deployment (Render + Supabase + Vercel)
 
-Backend on Render (free web service + free Postgres), frontend on Vercel. Both auto-deploy on push to `main`.
+Backend on Render (free web service), database on Supabase (free Postgres project), frontend on Vercel. All three auto-deploy / persist independently of each other.
+
+Render's free plan allows only **one** free Postgres database per account — if you already have one on another project, provision this app's database on Supabase instead so nothing shares or collides.
+
+**Database — Supabase**
+1. supabase.com → New project (pick a region close to your Render region).
+2. Project Settings → Database → Connection string → copy the **URI** (starts `postgresql://postgres:...`). Fill in the password you set when creating the project.
+3. Keep this URI handy for the Render step below.
 
 **Backend — Render**
-1. Render dashboard → New → Blueprint → connect `Gahan83/SpendSense` → it reads [render.yaml](render.yaml) and provisions `spendsense-api` (web service) + `spendsense-db` (Postgres) automatically.
-2. Once live, copy the service URL (e.g. `https://spendsense-api-xxxx.onrender.com`).
-3. Free tier: cold start ~50s after idle; free Postgres expires after ~90 days (upgrade or recreate when it does).
+1. Render dashboard → New → Blueprint → connect `Gahan83/SpendSense` → it reads [render.yaml](render.yaml) and provisions the `spendsense-api` web service (no database — that lives on Supabase now).
+2. Once created, open `spendsense-api` → Environment → set `DATABASE_URL` to the Supabase connection string from above.
+3. Deploy, then copy the service URL (e.g. `https://spendsense-api-xxxx.onrender.com`).
+4. Free tier: Render web service cold-starts ~50s after 15min idle. Supabase free project pauses after 1 week of inactivity (any request wakes it, first one just takes a few extra seconds).
 
 **Frontend — Vercel**
 1. Vercel dashboard → New Project → import `Gahan83/SpendSense`.
@@ -77,7 +85,7 @@ Backend on Render (free web service + free Postgres), frontend on Vercel. Both a
 4. Deploy. [vercel.json](frontend/vercel.json) handles SPA routing so refreshing `/transactions` etc. doesn't 404.
 5. Vite bakes env vars in at build time — redeploy after changing `VITE_API_URL`.
 
-WhatsApp/Twilio credentials are entered live via the Settings page (stored in Postgres), not as env vars — no extra Render config needed for those.
+WhatsApp/Twilio credentials are entered live via the Settings page (stored in the database), not as env vars — no extra Render config needed for those.
 
 ## Project structure
 
