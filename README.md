@@ -61,6 +61,24 @@ Set a total monthly limit (and optional per-category sub-limits) on the **Budget
 
 Each alert type fires at most once per day per threshold (see `alert_log` table). A month-end summary is sent automatically on the last day of the month (APScheduler cron job) or on demand via **Generate Summary → Send to WhatsApp**.
 
+## Deployment (Render + Vercel)
+
+Backend on Render (free web service + free Postgres), frontend on Vercel. Both auto-deploy on push to `main`.
+
+**Backend — Render**
+1. Render dashboard → New → Blueprint → connect `Gahan83/SpendSense` → it reads [render.yaml](render.yaml) and provisions `spendsense-api` (web service) + `spendsense-db` (Postgres) automatically.
+2. Once live, copy the service URL (e.g. `https://spendsense-api-xxxx.onrender.com`).
+3. Free tier: cold start ~50s after idle; free Postgres expires after ~90 days (upgrade or recreate when it does).
+
+**Frontend — Vercel**
+1. Vercel dashboard → New Project → import `Gahan83/SpendSense`.
+2. Root Directory → `frontend`. Framework preset auto-detects Vite.
+3. Add env var `VITE_API_URL` = the Render backend URL from above (no trailing slash, no `/api` suffix — the app appends it).
+4. Deploy. [vercel.json](frontend/vercel.json) handles SPA routing so refreshing `/transactions` etc. doesn't 404.
+5. Vite bakes env vars in at build time — redeploy after changing `VITE_API_URL`.
+
+WhatsApp/Twilio credentials are entered live via the Settings page (stored in Postgres), not as env vars — no extra Render config needed for those.
+
 ## Project structure
 
 ```

@@ -20,7 +20,8 @@ export const updateTransactionCategory = (id, category) =>
 export const createTransaction = (payload) =>
   api.post('/transactions', payload).then((r) => r.data)
 
-export const exportTransactionsUrl = '/api/transactions/export'
+const API_BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api'
+export const exportTransactionsUrl = `${API_BASE}/transactions/export`
 
 export const getBudget = (year, month) =>
   api.get(`/budget/${year}/${month}`).then((r) => r.data)
@@ -33,6 +34,9 @@ export const getSettings = () => api.get('/settings').then((r) => r.data)
 export const putSettings = (payload) => api.put('/settings', payload).then((r) => r.data)
 
 export const sendTestAlert = () => api.post('/alerts/test').then((r) => r.data)
+
+export const getRecentAlerts = (limit = 10) =>
+  api.get('/alerts/recent', { params: { limit } }).then((r) => r.data)
 
 export const getCategoryRules = () => api.get('/category-rules').then((r) => r.data)
 

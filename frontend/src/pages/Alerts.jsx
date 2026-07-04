@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react'
-import { getSettings } from '../api'
+import { getSettings, getRecentAlerts } from '../api'
 import Icon from '../components/Icon'
 
-const SAMPLE_MSGS = [
-  {
-    time: '2:14 PM',
-    text: `📢 *Spending Warning — 80% Used*\n\nYou've used ₹24,100 of your ₹30,000 monthly budget (80%).\n\nRemaining: ₹5,900 with 9 days left (~₹655/day allowed).`,
-  },
-  {
-    time: '6:02 PM',
-    text: `⚠️ *Category Alert — Gym & Fitness*\n\nYou've hit your Gym & Fitness budget for the month.\n\nSpent: ₹1,500 / Limit: ₹1,500\nExcess: ₹0\n\nLatest transaction: ₹1,500 at Cult.fit`,
-  },
-  {
-    time: '9:47 PM',
-    text: `📅 *May 2026 — Monthly Summary*\n\n🍽 Food & Dining   ₹7,800  (34)\n🛒 Online Shopping ₹4,500  (9)\n⛽ Fuel           ₹3,200  (6)\n─────────────\n💰 *Total: ₹27,600*\n🎯 Budget: ₹30,000  ✅ Under by ₹2,400`,
-  },
-]
+function formatTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso.endsWith('Z') ? iso : iso + 'Z')
+  return d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })
+}
 
 function Card({ children, className = '' }) {
   return (
@@ -27,10 +18,13 @@ function Card({ children, className = '' }) {
 
 export default function Alerts() {
   const [settings, setSettings] = useState(null)
+  const [alerts, setAlerts] = useState(null)
 
-  useEffect(() => { getSettings().then(setSettings) }, [])
+  useEffect(() => {
+    getSettings().then(setSettings)
+    getRecentAlerts(10).then(setAlerts)
+  }, [])
 
-  const budgetLimit = settings?.total_limit
   const phone = settings?.phone_number
 
   return (
@@ -52,11 +46,21 @@ export default function Alerts() {
               <Icon name="more_vert" size={20} color="#fff" />
             </div>
             <div className="flex-1 overflow-y-auto flex flex-col gap-[10px]" style={{ padding: '14px 12px', backgroundImage: 'linear-gradient(rgba(236,229,221,.9),rgba(236,229,221,.9))' }}>
-              <div className="self-center text-[10px] font-medium px-[10px] py-[3px] rounded-lg" style={{ background: '#D4E9F7', color: '#4A6572' }}>TODAY</div>
-              {SAMPLE_MSGS.map((m, i) => (
-                <div key={i} className="self-start max-w-[88%] bg-white p-[8px_10px_6px]" style={{ borderRadius: '2px 9px 9px 9px', boxShadow: '0 1px 1px rgba(0,0,0,.12)' }}>
-                  <div className="text-[11.5px] leading-[1.5] whitespace-pre-line" style={{ color: '#111B21' }}>{m.text}</div>
-                  <div className="text-right text-[9px] mt-[2px]" style={{ color: '#8696A0' }}>{m.time}</div>
+              <div className="self-center text-[10px] font-medium px-[10px] py-[3px] rounded-lg" style={{ background: '#D4E9F7', color: '#4A6572' }}>RECENT</div>
+              {alerts === null && (
+                <div className="self-center text-[11px] text-[#5A6478] mt-4">Loading…</div>
+              )}
+              {alerts?.length === 0 && (
+                <div className="self-start max-w-[88%] bg-white p-[8px_10px_6px]" style={{ borderRadius: '2px 9px 9px 9px', boxShadow: '0 1px 1px rgba(0,0,0,.12)' }}>
+                  <div className="text-[11.5px] leading-[1.5]" style={{ color: '#111B21' }}>
+                    No alerts sent yet. Import a statement or hit "Send test message" in Settings to see one here.
+                  </div>
+                </div>
+              )}
+              {alerts?.slice().reverse().map((a) => (
+                <div key={a.id} className="self-start max-w-[88%] bg-white p-[8px_10px_6px]" style={{ borderRadius: '2px 9px 9px 9px', boxShadow: '0 1px 1px rgba(0,0,0,.12)' }}>
+                  <div className="text-[11.5px] leading-[1.5] whitespace-pre-line" style={{ color: '#111B21' }}>{a.message}</div>
+                  <div className="text-right text-[9px] mt-[2px]" style={{ color: '#8696A0' }}>{formatTime(a.sent_at)}</div>
                 </div>
               ))}
             </div>
