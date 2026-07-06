@@ -8,7 +8,6 @@ const TITLES = {
   '/import': ['Import', 'Upload and categorise your PhonePe history'],
   '/budget': ['Budget', 'Set your monthly and per-category limits'],
   '/summary': ['Month-End Summary', 'Completed month report'],
-  '/alerts': ['WhatsApp Alerts', 'How and when you get notified'],
   '/settings': ['Settings', 'WhatsApp, Twilio and category rules'],
 }
 

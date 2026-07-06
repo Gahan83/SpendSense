@@ -7,7 +7,6 @@ import Transactions from './pages/Transactions'
 import Budget from './pages/Budget'
 import Settings from './pages/Settings'
 import Summary from './pages/Summary'
-import Alerts from './pages/Alerts'
 
 export default function App() {
   return (
@@ -24,7 +23,6 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/summary" element={<Summary />} />
             <Route path="/summary/:year/:month" element={<Summary />} />
-            <Route path="/alerts" element={<Alerts />} />
           </Routes>
         </div>
       </main>

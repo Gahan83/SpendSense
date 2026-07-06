@@ -9,7 +9,6 @@ const NAV = [
   { to: '/import', label: 'Import', icon: 'cloud_upload' },
   { to: '/budget', label: 'Budget', icon: 'account_balance_wallet' },
   { to: '/summary', label: 'Summary', icon: 'summarize' },
-  { to: '/alerts', label: 'WhatsApp Alerts', icon: 'chat' },
   { to: '/settings', label: 'Settings', icon: 'settings' },
 ]
 

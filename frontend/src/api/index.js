@@ -35,9 +35,6 @@ export const putSettings = (payload) => api.put('/settings', payload).then((r) =
 
 export const sendTestAlert = () => api.post('/alerts/test').then((r) => r.data)
 
-export const getRecentAlerts = (limit = 10) =>
-  api.get('/alerts/recent', { params: { limit } }).then((r) => r.data)
-
 export const getCategoryRules = () => api.get('/category-rules').then((r) => r.data)
 
 export const createCategoryRule = (payload) =>
