@@ -50,11 +50,15 @@ export default function Dashboard() {
   const [year, setYear] = useState(now.getFullYear())
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     setLoading(true)
-    getDashboard(month, year).then((d) => { setData(d); setLoading(false) })
+    setError(null)
+    getDashboard(month, year)
+      .then((d) => { setData(d); setLoading(false) })
+      .catch((e) => { setError(e.response?.data?.detail || 'Could not load dashboard'); setLoading(false) })
   }, [month, year])
 
   const changeMonth = (delta) => {
@@ -64,6 +68,7 @@ export default function Dashboard() {
     setMonth(m); setYear(y)
   }
 
+  if (error) return <div className="text-[#DC2626] text-sm">{error}</div>
   if (loading || !data) return <div className="text-[#8891A3] text-sm">Loading dashboard...</div>
 
   const topCat = [...data.category_breakdown].sort((a, b) => b.spent - a.spent)[0]

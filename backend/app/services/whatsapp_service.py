@@ -1,7 +1,7 @@
 import calendar
 from datetime import date, datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, extract, Date
 
 from ..models import Transaction, Budget, AlertLog
 from ..categories import CATEGORY_EMOJI
@@ -11,16 +11,16 @@ from . import settings_service
 def _month_debits_query(db: Session, month: int, year: int):
     return db.query(Transaction).filter(
         Transaction.type == "DEBIT",
-        func.strftime("%m", Transaction.date) == f"{month:02d}",
-        func.strftime("%Y", Transaction.date) == str(year),
+        extract("month", Transaction.date) == month,
+        extract("year", Transaction.date) == year,
     )
 
 
 def get_month_spend(db: Session, month: int, year: int) -> float:
     total = db.query(func.sum(Transaction.amount)).filter(
         Transaction.type == "DEBIT",
-        func.strftime("%m", Transaction.date) == f"{month:02d}",
-        func.strftime("%Y", Transaction.date) == str(year),
+        extract("month", Transaction.date) == month,
+        extract("year", Transaction.date) == year,
     ).scalar()
     return float(total or 0)
 
@@ -28,8 +28,8 @@ def get_month_spend(db: Session, month: int, year: int) -> float:
 def get_category_spend(db: Session, month: int, year: int) -> dict:
     rows = db.query(Transaction.category, func.sum(Transaction.amount), func.count(Transaction.id)).filter(
         Transaction.type == "DEBIT",
-        func.strftime("%m", Transaction.date) == f"{month:02d}",
-        func.strftime("%Y", Transaction.date) == str(year),
+        extract("month", Transaction.date) == month,
+        extract("year", Transaction.date) == year,
     ).group_by(Transaction.category).all()
     return {cat: {"amount": float(amt or 0), "count": int(cnt or 0)} for cat, amt, cnt in rows}
 
@@ -39,12 +39,12 @@ def get_budget(db: Session, month: int, year: int) -> Budget | None:
 
 
 def alerted_today(db: Session, alert_type: str, month: int, year: int) -> bool:
-    today = date.today().isoformat()
+    today = date.today()
     row = db.query(AlertLog).filter(
         AlertLog.alert_type == alert_type,
         AlertLog.month == month,
         AlertLog.year == year,
-        func.date(AlertLog.sent_at) == today,
+        func.cast(AlertLog.sent_at, Date) == today,
     ).first()
     return row is not None
 
@@ -88,8 +88,8 @@ def check_and_alert(db: Session, month: int, year: int) -> list[dict]:
     top_category = max(cat_spend.items(), key=lambda kv: kv[1]["amount"])[0] if cat_spend else "N/A"
     latest_txn = db.query(Transaction).filter(
         Transaction.type == "DEBIT",
-        func.strftime("%m", Transaction.date) == f"{month:02d}",
-        func.strftime("%Y", Transaction.date) == str(year),
+        extract("month", Transaction.date) == month,
+        extract("year", Transaction.date) == year,
     ).order_by(Transaction.id.desc()).first()
 
     if total_spent >= budget.total_limit:
@@ -139,8 +139,8 @@ def check_and_alert(db: Session, month: int, year: int) -> list[dict]:
                 cat_txns = db.query(Transaction).filter(
                     Transaction.category == category,
                     Transaction.type == "DEBIT",
-                    func.strftime("%m", Transaction.date) == f"{month:02d}",
-                    func.strftime("%Y", Transaction.date) == str(year),
+                    extract("month", Transaction.date) == month,
+                    extract("year", Transaction.date) == year,
                 ).order_by(Transaction.id.desc()).first()
                 latest_line = f"Latest transaction: ₹{cat_txns.amount:,.0f} at {cat_txns.merchant}" if cat_txns else ""
                 body = (
@@ -165,14 +165,14 @@ def build_month_end_summary(db: Session, month: int, year: int) -> dict:
 
     biggest = db.query(Transaction).filter(
         Transaction.type == "DEBIT",
-        func.strftime("%m", Transaction.date) == f"{month:02d}",
-        func.strftime("%Y", Transaction.date) == str(year),
+        extract("month", Transaction.date) == month,
+        extract("year", Transaction.date) == year,
     ).order_by(Transaction.amount.desc()).first()
 
     merchant_counts = db.query(Transaction.merchant, func.count(Transaction.id)).filter(
         Transaction.type == "DEBIT",
-        func.strftime("%m", Transaction.date) == f"{month:02d}",
-        func.strftime("%Y", Transaction.date) == str(year),
+        extract("month", Transaction.date) == month,
+        extract("year", Transaction.date) == year,
     ).group_by(Transaction.merchant).order_by(func.count(Transaction.id).desc()).first()
 
     prev_month, prev_year = (month - 1, year) if month > 1 else (12, year - 1)

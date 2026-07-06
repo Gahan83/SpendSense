@@ -38,9 +38,16 @@ export default function Summary() {
   const year = Number(params.year) || now.getFullYear()
   const month = Number(params.month) || now.getMonth() + 1
   const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
 
-  useEffect(() => { getSummary(year, month).then(setData) }, [year, month])
+  useEffect(() => {
+    setError(null)
+    getSummary(year, month)
+      .then(setData)
+      .catch((e) => setError(e.response?.data?.detail || 'Could not load summary'))
+  }, [year, month])
 
+  if (error) return <div className="text-[#DC2626] text-sm">{error}</div>
   if (!data) return <div className="text-[#8891A3] text-sm">Loading summary...</div>
 
   const categories = Object.entries(data.categories).sort((a, b) => b[1].amount - a[1].amount)

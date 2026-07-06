@@ -21,18 +21,20 @@ export default function Budget() {
   const [resetDay, setResetDay] = useState(1)
   const [spend, setSpend] = useState({})
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
+    setError(null)
     getBudget(year, month).then((b) => {
       setTotalLimit(b.total_limit)
       setCategoryLimits(b.category_limits || {})
       setResetDay(b.reset_day || 1)
-    })
+    }).catch((e) => setError(e.response?.data?.detail || 'Could not load budget'))
     getDashboard(month, year).then((d) => {
       const map = {}
       d.category_breakdown.forEach((c) => { map[c.category] = c.spent })
       setSpend(map)
-    })
+    }).catch(() => {})
   }, [month, year])
 
   const save = async () => {
@@ -54,6 +56,8 @@ export default function Budget() {
         <input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))}
           className="bg-white border border-[#E7E9F0] rounded-[10px] px-3 py-2 text-[13px] font-semibold w-24" />
       </div>
+
+      {error && <div className="text-[#DC2626] text-sm mb-4">{error}</div>}
 
       <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 300px' }}>
         <div className="flex flex-col gap-4">
