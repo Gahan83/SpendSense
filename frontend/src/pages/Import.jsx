@@ -109,12 +109,6 @@ export default function Import() {
                     <span className="font-mono-geist text-base font-semibold" style={{ color: '#B7791F' }}>{result.unknown_columns.length}</span>
                   </div>
                 )}
-                {result.alerts_fired?.length > 0 && (
-                  <div className="flex items-center gap-2 text-[12.5px] font-semibold" style={{ color: '#4F46E5' }}>
-                    <Icon name="notifications_active" size={16} color="#4F46E5" />
-                    {result.alerts_fired.length} WhatsApp alert(s) triggered
-                  </div>
-                )}
               </div>
             </>
           )}

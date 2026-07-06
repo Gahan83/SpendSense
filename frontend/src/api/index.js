@@ -29,12 +29,6 @@ export const getBudget = (year, month) =>
 export const setBudget = (year, month, payload) =>
   api.put(`/budget/${year}/${month}`, payload).then((r) => r.data)
 
-export const getSettings = () => api.get('/settings').then((r) => r.data)
-
-export const putSettings = (payload) => api.put('/settings', payload).then((r) => r.data)
-
-export const sendTestAlert = () => api.post('/alerts/test').then((r) => r.data)
-
 export const getCategoryRules = () => api.get('/category-rules').then((r) => r.data)
 
 export const createCategoryRule = (payload) =>

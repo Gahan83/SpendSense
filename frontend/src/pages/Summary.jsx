@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getSummary, sendSummary, exportTransactionsUrl } from '../api'
+import { getSummary, exportTransactionsUrl } from '../api'
 import { getCategoryMeta } from '../categoryMeta'
 import { MONTH_NAMES } from '../constants'
 import Icon from '../components/Icon'
@@ -38,7 +38,6 @@ export default function Summary() {
   const year = Number(params.year) || now.getFullYear()
   const month = Number(params.month) || now.getMonth() + 1
   const [data, setData] = useState(null)
-  const [sendResult, setSendResult] = useState(null)
 
   useEffect(() => { getSummary(year, month).then(setData) }, [year, month])
 
@@ -56,8 +55,6 @@ export default function Summary() {
     navigate(`/summary/${y}/${m}`)
   }
 
-  const handleSend = async () => setSendResult(await sendSummary(year, month))
-
   return (
     <div style={{ maxWidth: 1080 }}>
       <div className="flex items-center justify-between mb-[18px]">
@@ -70,17 +67,8 @@ export default function Summary() {
           <a href={exportTransactionsUrl} className="inline-flex items-center gap-[7px] bg-white border border-[#E7E9F0] rounded-[10px] px-[14px] py-[9px] text-[13px] font-semibold text-[#344054] no-underline">
             <Icon name="download" size={18} color="#344054" /> Export CSV
           </a>
-          <button onClick={handleSend} className="inline-flex items-center gap-[7px] rounded-[10px] px-[15px] py-[9px] text-[13px] font-semibold text-white"
-            style={{ background: '#25D366', boxShadow: '0 4px 12px -4px rgba(37,211,102,.5)' }}>
-            <Icon name="send" size={18} color="#fff" /> Send to WhatsApp
-          </button>
         </div>
       </div>
-      {sendResult && (
-        <p className="text-xs font-medium mb-3" style={{ color: sendResult.sent ? '#16A34A' : '#DC2626' }}>
-          {sendResult.sent ? 'Summary sent ✓' : `Failed: ${sendResult.reason}`}
-        </p>
-      )}
 
       <div className="bg-white border border-[#EAECF3] rounded-[20px] overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(16,24,40,.05)' }}>
         {/* header band */}

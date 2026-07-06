@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Icon from './Icon'
-import { getSettings } from '../api'
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: 'space_dashboard', end: true },
@@ -13,15 +11,6 @@ const NAV = [
 ]
 
 export default function Sidebar() {
-  const [settings, setSettings] = useState(null)
-
-  useEffect(() => {
-    getSettings().then(setSettings).catch(() => {})
-  }, [])
-
-  const alertsOn = settings?.alerts_enabled === 'true' || settings?.alerts_enabled === true
-  const phone = settings?.phone_number
-
   return (
     <aside className="w-[252px] flex-shrink-0 bg-white border-r border-[#EAECF3] flex flex-col p-[22px_16px]">
       <div className="flex items-center gap-[11px] px-2 pb-[22px] pt-1">
@@ -67,19 +56,6 @@ export default function Sidebar() {
       </nav>
 
       <div className="mt-auto">
-        <div className="bg-[#F5F5FE] border border-[#E7E7FB] rounded-[13px] p-[14px]">
-          <div className="flex items-center gap-2">
-            <Icon name="verified" size={18} color="#4F46E5" />
-            <span className="text-[12.5px] font-semibold text-[#3F3ABE]">
-              {alertsOn ? 'Alerts active' : 'Alerts off'}
-            </span>
-          </div>
-          <div className="text-[11.5px] text-[#8886C8] mt-[5px] leading-[1.5]">
-            {alertsOn
-              ? `WhatsApp alerts on${phone ? ` for ${phone}` : ''}. You'll be warned at 80%.`
-              : 'Turn on alerts in Settings to get WhatsApp warnings.'}
-          </div>
-        </div>
         <div className="flex items-center gap-[11px] px-2 pt-3 pb-[2px]">
           <div className="w-[34px] h-[34px] rounded-full bg-[#E7E9F2] flex items-center justify-center text-[13px] font-semibold text-[#5A6478]">
             G
