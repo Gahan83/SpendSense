@@ -3,7 +3,7 @@ import io
 from datetime import date as date_cls
 from typing import Optional
 
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import extract, or_
@@ -12,6 +12,7 @@ from ..database import get_db
 from ..models import Transaction
 from ..schemas import TransactionOut, TransactionCreate, TransactionUpdate
 from ..services.parser import parse_transaction_file
+from ..services.pdf_parser import parse_phonepe_pdf, PdfPasswordRequired, PdfWrongPassword
 from ..services.categoriser import categorise
 from ..services.whatsapp_service import check_and_alert
 
@@ -19,10 +20,21 @@ router = APIRouter(prefix="/api/transactions", tags=["transactions"])
 
 
 @router.post("/import")
-async def import_transactions(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def import_transactions(
+    file: UploadFile = File(...),
+    password: str | None = Form(default=None),
+    db: Session = Depends(get_db),
+):
     content = await file.read()
     try:
-        parsed = parse_transaction_file(file.filename, content)
+        if file.filename.lower().endswith(".pdf"):
+            parsed = parse_phonepe_pdf(content, password)
+        else:
+            parsed = parse_transaction_file(file.filename, content)
+    except PdfPasswordRequired as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except PdfWrongPassword as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Could not parse file: {exc}")
 

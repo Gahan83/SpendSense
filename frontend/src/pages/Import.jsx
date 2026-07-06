@@ -13,6 +13,8 @@ function Card({ children, className = '' }) {
 
 export default function Import() {
   const [file, setFile] = useState(null)
+  const [password, setPassword] = useState('')
+  const [needsPassword, setNeedsPassword] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -23,6 +25,8 @@ export default function Import() {
     setFile(f)
     setResult(null)
     setError(null)
+    setNeedsPassword(false)
+    setPassword('')
   }
 
   const handleUpload = async () => {
@@ -30,10 +34,17 @@ export default function Import() {
     setLoading(true)
     setError(null)
     try {
-      const res = await importTransactions(file)
+      const res = await importTransactions(file, password || undefined)
       setResult(res)
+      setNeedsPassword(false)
     } catch (e) {
-      setError(e.response?.data?.detail || 'Import failed')
+      const status = e.response?.status
+      if (status === 422 || status === 401) {
+        setNeedsPassword(true)
+        setError(status === 401 ? 'Wrong password — try again' : 'This PDF is password-protected — enter the password')
+      } else {
+        setError(e.response?.data?.detail || 'Import failed')
+      }
     } finally {
       setLoading(false)
     }
@@ -54,7 +65,7 @@ export default function Import() {
           className="bg-white rounded-[18px] p-[38px] text-center flex flex-col items-center justify-center cursor-pointer"
           style={{ border: `2px dashed ${dragOver ? '#4F46E5' : '#C9CEDE'}` }}
         >
-          <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden"
+          <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls,.pdf" className="hidden"
             onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
           <div className="w-[60px] h-[60px] rounded-2xl flex items-center justify-center mb-[14px]" style={{ background: '#EEF0FE' }}>
             <Icon name="cloud_upload" size={30} color="#4F46E5" />
@@ -63,8 +74,19 @@ export default function Import() {
             {file ? file.name : 'Drop your PhonePe export here'}
           </div>
           <div className="text-[12.5px] text-[#8891A3] mt-[5px] leading-[1.5]" style={{ maxWidth: 340 }}>
-            Upload the CSV or Excel history exported from PhonePe. We also accept HDFC / ICICI / SBI UPI statements.
+            Upload the CSV, Excel, or PDF statement exported from PhonePe. We also accept HDFC / ICICI / SBI UPI statements.
           </div>
+          {needsPassword && (
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="PDF password"
+              className="mt-4 border border-[#E4E7EF] rounded-[10px] px-3 py-2 text-[13px] w-[220px] text-center outline-none"
+              style={{ background: '#F7F8FB' }}
+            />
+          )}
           <button
             onClick={(e) => { e.stopPropagation(); file ? handleUpload() : inputRef.current?.click() }}
             disabled={loading}
@@ -74,7 +96,7 @@ export default function Import() {
             <Icon name={file ? 'publish' : 'upload_file'} size={18} color="#fff" />
             {loading ? 'Importing…' : file ? 'Import file' : 'Choose file'}
           </button>
-          <div className="text-[11px] text-[#AEB4C2] mt-3">CSV, XLSX · up to 10MB</div>
+          <div className="text-[11px] text-[#AEB4C2] mt-3">CSV, XLSX, PDF · up to 10MB</div>
         </div>
 
         {/* result */}

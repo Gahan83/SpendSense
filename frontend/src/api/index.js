@@ -3,9 +3,10 @@ import api from './client'
 export const getDashboard = (month, year) =>
   api.get('/dashboard', { params: { month, year } }).then((r) => r.data)
 
-export const importTransactions = (file) => {
+export const importTransactions = (file, password) => {
   const form = new FormData()
   form.append('file', file)
+  if (password) form.append('password', password)
   return api.post('/transactions/import', form, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }).then((r) => r.data)
