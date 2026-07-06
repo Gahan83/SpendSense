@@ -18,7 +18,7 @@ def get_budget(year: int, month: int, db: Session = Depends(get_db)):
         ).order_by(Budget.year.desc(), Budget.month.desc()).first()
         budget = Budget(
             month=month, year=year,
-            total_limit=prior.total_limit if prior else 0,
+            total_limit=prior.total_limit if prior else 25000,
             category_limits=prior.category_limits if prior else {},
             reset_day=prior.reset_day if prior else 1,
         )
